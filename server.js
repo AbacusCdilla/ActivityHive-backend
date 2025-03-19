@@ -40,13 +40,7 @@ app.get("/", (req, res) => {
 });
 
 // ✅ Get All Lessons API
-app.get("/lessons", async (req, res) => {
-  try {
-    const lessons = await lessonsCollection.find().toArray();
-    res.json(lessons);
-  } catch (err) {
-    console.error("❌ Error fetching lessons:", err);
-    res.status(500).json({ error: "Failed to fetch lessons" });
+app.gefetch lessons" });
   }
 });
 

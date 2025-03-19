@@ -32,7 +32,10 @@ async function createOrder(req, res) {
 
         res.json({ success: true, lessons: updatedLessons });
 
-    } 
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Order creation failed' });
+    } finally {
         await client.close();
     }
 }
