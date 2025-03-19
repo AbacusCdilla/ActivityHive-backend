@@ -74,7 +74,19 @@ app.post("/orders", async (req, res) => {
       return res.status(400).json({ success: false, error: "⚠️ Not enough space in one or more lessons." });
     }
 
-    /
+    // ✅ Insert Order & Update Lesson Spaces
+    const session = client.startSession();
+    await session.withTransaction(async () => {
+      const orderResult = await ordersCollection.insertOne({
+        firstName,
+        lastName,
+        address,
+        city,
+        state,
+        zip,
+        items,
+        createdAt: new Date()
+      }, { session });
 
       // ✅ Reduce Lesson Spaces
       for (const item of items) {
