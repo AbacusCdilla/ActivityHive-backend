@@ -13,6 +13,9 @@ async function createOrder(req, res) {
 
         const { firstName, lastName, address, city, state, zip, method, items } = req.body;
 
+        // ✅ Insert order
+        const orderData = { firstName, lastName, address, city, state, zip, method, items };
+        await ordersCollection.insertOne(orderData);
 
         // ✅ Update lesson spaces
         for (const item of items) {
@@ -25,9 +28,7 @@ async function createOrder(req, res) {
         }
 
         // ✅ Fetch updated lessons
-        const updatedLessons = await lessonsCollection.find().toArray();
-
-        res.json({ success: true, lessons: updatedLessons });
+        
 
     } catch (error) {
         console.error(error);
