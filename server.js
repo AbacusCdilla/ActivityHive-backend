@@ -15,8 +15,7 @@ app.use(cors({
 app.use(express.json());
 
 // ✅ MongoDB Connection
-const uri = "mongodb+srv://msharjeelzahid:Abacus41.@cluster0.zvz6v.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
-const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+
 
 let lessonsCollection;
 let ordersCollection;
