@@ -40,7 +40,13 @@ app.get("/", (req, res) => {
 });
 
 // ✅ Get All Lessons API
-app.gefetch lessons" });
+app.get("/lessons", async (req, res) => {
+  try {
+    const lessons = await lessonsCollection.find().toArray();
+    res.json(lessons);
+  } catch (err) {
+    console.error("❌ Error fetching lessons:", err);
+    res.status(500).json({ error: "Failed to fetch lessons" });
   }
 });
 
@@ -68,19 +74,7 @@ app.post("/orders", async (req, res) => {
       return res.status(400).json({ success: false, error: "⚠️ Not enough space in one or more lessons." });
     }
 
-    // ✅ Insert Order & Update Lesson Spaces
-    const session = client.startSession();
-    await session.withTransaction(async () => {
-      const orderResult = await ordersCollection.insertOne({
-        firstName,
-        lastName,
-        address,
-        city,
-        state,
-        zip,
-        items,
-        createdAt: new Date()
-      }, { session });
+    /
 
       // ✅ Reduce Lesson Spaces
       for (const item of items) {
