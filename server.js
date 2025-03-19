@@ -7,7 +7,7 @@ const port = process.env.PORT || 3000;
 
 // ✅ Fix: CORS Middleware
 app.use(cors({
-  origin: "https://abacuscdilla.github.io", // ✅ Your frontend URL
+  origin: "https://abacuscdilla.github.io/ActivityHive-frontend/", // ✅ Your frontend URL
   methods: "GET,POST,PUT,DELETE",
   allowedHeaders: "Content-Type, Authorization"
 }));
@@ -110,6 +110,6 @@ app.post("/orders", async (req, res) => {
 // ✅ Start Server
 connectDB().then(() => {
   app.listen(port, () => 
-    console.log(`🚀 Server running on Render: https://activityhive-backend-1.onrender.com`)
+    console.log(`🚀 Server running on Render: https://activityhive-backend-2.onrender.com`)
   );
 });
