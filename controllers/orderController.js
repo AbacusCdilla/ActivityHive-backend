@@ -28,7 +28,9 @@ async function createOrder(req, res) {
         }
 
         // ✅ Fetch updated lessons
-        
+        const updatedLessons = await lessonsCollection.find().toArray();
+
+        res.json({ success: true, lessons: updatedLessons });
 
     } catch (error) {
         console.error(error);
