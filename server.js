@@ -51,7 +51,9 @@ app.get("/lessons", async (req, res) => {
 });
 
 // ✅ Place Order API (Fixed)
-app.pos
+app.post("/orders", async (req, res) => {
+  try {
+    const { firstName, lastName, address, city, state, zip, items } = req.body;
 
     // ✅ Validation
     if (!firstName || !lastName || !address || !city || !state || !zip || !items || items.length === 0) {
