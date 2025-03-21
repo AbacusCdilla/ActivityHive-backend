@@ -60,9 +60,10 @@ app.get("/lessons", async (req, res) => {
 app.get("/lessons/search", async (req, res) => {
   try {
     const { q } = req.query;
-    console.log("Received Query:", q); // ✅ Debugging
+    console.log("🔍 Received Query:", q); // ✅ Debugging Query Value
 
-    if (!q) {
+    if (!q || q.trim() === "") {
+      console.log("⚠️ Query is missing!");
       return res.status(400).json({ error: "⚠️ Query parameter is required" });
     }
 
@@ -73,18 +74,17 @@ app.get("/lessons/search", async (req, res) => {
       "price",
       "category",
       "description",
-    ]; // ✅ Searchable fields
+    ];
     const queryConditions = schemaFields
-      .filter((field) => field !== "price") // ✅ Price ko alag handle karenge
+      .filter((field) => field !== "price")
       .map((field) => ({
         [field]: { $regex: q, $options: "i" },
       }));
 
-    // ✅ Price ko numeric aur string dono format me check karna
     if (!isNaN(q)) {
-      queryConditions.push({ price: parseFloat(q) }); // ✅ Numeric search
+      queryConditions.push({ price: parseFloat(q) });
     } else {
-      queryConditions.push({ price: { $regex: q, $options: "i" } }); // ✅ String search
+      queryConditions.push({ price: { $regex: q, $options: "i" } });
     }
 
     const lessons = await lessonsCollection
@@ -93,7 +93,7 @@ app.get("/lessons/search", async (req, res) => {
       })
       .toArray();
 
-    console.log("Search Results:", lessons); // ✅ Debugging
+    console.log("✅ Search Results:", lessons);
     res.json(lessons);
   } catch (err) {
     console.error("❌ Error searching lessons:", err);
@@ -159,12 +159,10 @@ app.post("/orders", async (req, res) => {
     }
 
     if (!allAvailable) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          error: "⚠️ Not enough space in one or more lessons.",
-        });
+      return res.status(400).json({
+        success: false,
+        error: "⚠️ Not enough space in one or more lessons.",
+      });
     }
 
     // ✅ Insert Order & Update Lesson Spaces
@@ -193,13 +191,11 @@ app.post("/orders", async (req, res) => {
         );
       }
 
-      res
-        .status(201)
-        .json({
-          success: true,
-          message: "🎉 Order placed successfully!",
-          orderId: orderResult.insertedId,
-        });
+      res.status(201).json({
+        success: true,
+        message: "🎉 Order placed successfully!",
+        orderId: orderResult.insertedId,
+      });
     });
 
     await session.endSession();
