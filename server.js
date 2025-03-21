@@ -50,29 +50,25 @@ app.get("/lessons", async (req, res) => {
   }
 });
 
-// ✅ Update Lesson Space API
+// ✅ Update Lesson API (PUT)
 app.put("/lessons/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { space } = req.body;
-
-    if (space === undefined) {
-      return res.status(400).json({ success: false, error: "⚠️ Space value is required" });
-    }
+    const updateData = req.body; // Any field can be updated
 
     const result = await lessonsCollection.updateOne(
       { _id: new ObjectId(id) },
-      { $set: { space } }
+      { $set: updateData }
     );
 
     if (result.matchedCount === 0) {
       return res.status(404).json({ success: false, error: "Lesson not found" });
     }
 
-    res.json({ success: true, message: "Lesson space updated successfully!" });
+    res.json({ success: true, message: "Lesson updated successfully" });
   } catch (err) {
-    console.error("❌ Error updating space:", err);
-    res.status(500).json({ success: false, error: "❌ Failed to update lesson space" });
+    console.error("❌ Error updating lesson:", err);
+    res.status(500).json({ error: "Failed to update lesson" });
   }
 });
 
@@ -81,10 +77,12 @@ app.post("/orders", async (req, res) => {
   try {
     const { firstName, lastName, address, city, state, zip, items } = req.body;
 
+    // ✅ Validation
     if (!firstName || !lastName || !address || !city || !state || !zip || !items || items.length === 0) {
       return res.status(400).json({ success: false, error: "⚠️ Missing required fields" });
     }
 
+    // ✅ Check Lesson Availability
     let allAvailable = true;
     for (const item of items) {
       const lesson = await lessonsCollection.findOne({ _id: new ObjectId(item.lessonId) });
@@ -98,6 +96,7 @@ app.post("/orders", async (req, res) => {
       return res.status(400).json({ success: false, error: "⚠️ Not enough space in one or more lessons." });
     }
 
+    // ✅ Insert Order & Update Lesson Spaces
     const session = client.startSession();
     await session.withTransaction(async () => {
       const orderResult = await ordersCollection.insertOne({
@@ -111,6 +110,7 @@ app.post("/orders", async (req, res) => {
         createdAt: new Date()
       }, { session });
 
+      // ✅ Reduce Lesson Spaces
       for (const item of items) {
         await lessonsCollection.updateOne(
           { _id: new ObjectId(item.lessonId) },
