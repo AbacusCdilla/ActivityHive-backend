@@ -7,7 +7,7 @@ const port = process.env.PORT || 3000;
 
 // ✅ Fix: CORS Middleware
 app.use(cors({
-  origin: "https://abacuscdilla.github.io/ActivityHive-frontend/", // ✅ Your frontend URL
+  origin: "https://abacuscdilla.github.io", // ✅ Your frontend URL
   methods: "GET,POST,PUT,DELETE",
   allowedHeaders: "Content-Type, Authorization"
 }));
