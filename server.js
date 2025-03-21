@@ -54,23 +54,29 @@ app.get("/lessons", async (req, res) => {
 app.get("/lessons/search", async (req, res) => {
   try {
     const { q } = req.query;
+    console.log("Received Query:", q); // ✅ Debugging
+
     if (!q) {
       return res.status(400).json({ error: "⚠️ Query parameter is required" });
     }
-    
+
+    const schemaFields = ["subject","title", "location","price", "category", "description"]; // ✅ Saare fields
+    const queryConditions = schemaFields.map(field => ({
+      [field]: { $regex: q, $options: "i" }
+    }));
+
     const lessons = await lessonsCollection.find({
-      $or: [
-        { name: { $regex: q, $options: "i" } },
-        { description: { $regex: q, $options: "i" } }
-      ]
+      $or: queryConditions
     }).toArray();
-    
+
+    console.log("Search Results:", lessons); // ✅ Debugging
     res.json(lessons);
   } catch (err) {
     console.error("❌ Error searching lessons:", err);
     res.status(500).json({ error: "Failed to search lessons" });
   }
 });
+
 
 // ✅ Update Lesson API (PUT)
 app.put("/lessons/:id", async (req, res) => {
