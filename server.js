@@ -6,17 +6,23 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // ✅ Fix: CORS Middleware
-app.use(cors({
-  origin: "https://abacuscdilla.github.io", // ✅ Your frontend URL
-  methods: "GET,POST,PUT,DELETE",
-  allowedHeaders: "Content-Type, Authorization"
-}));
+app.use(
+  cors({
+    origin: "https://abacuscdilla.github.io", // ✅ Your frontend URL
+    methods: "GET,POST,PUT,DELETE",
+    allowedHeaders: "Content-Type, Authorization",
+  })
+);
 
 app.use(express.json());
 
 // ✅ MongoDB Connection
-const uri = "mongodb+srv://msharjeelzahid:Abacus41.@cluster0.zvz6v.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
-const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+const uri =
+  "mongodb+srv://msharjeelzahid:Abacus41.@cluster0.zvz6v.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+const client = new MongoClient(uri, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
 
 let lessonsCollection;
 let ordersCollection;
@@ -60,14 +66,32 @@ app.get("/lessons/search", async (req, res) => {
       return res.status(400).json({ error: "⚠️ Query parameter is required" });
     }
 
-    const schemaFields = ["subject","title", "location","price", "category", "description"]; // ✅ Saare fields
-    const queryConditions = schemaFields.map(field => ({
-      [field]: { $regex: q, $options: "i" }
-    }));
+    const schemaFields = [
+      "subject",
+      "title",
+      "location",
+      "price",
+      "category",
+      "description",
+    ]; // ✅ Searchable fields
+    const queryConditions = schemaFields
+      .filter((field) => field !== "price") // ✅ Price ko alag handle karenge
+      .map((field) => ({
+        [field]: { $regex: q, $options: "i" },
+      }));
 
-    const lessons = await lessonsCollection.find({
-      $or: queryConditions
-    }).toArray();
+    // ✅ Price ko numeric aur string dono format me check karna
+    if (!isNaN(q)) {
+      queryConditions.push({ price: parseFloat(q) }); // ✅ Numeric search
+    } else {
+      queryConditions.push({ price: { $regex: q, $options: "i" } }); // ✅ String search
+    }
+
+    const lessons = await lessonsCollection
+      .find({
+        $or: queryConditions,
+      })
+      .toArray();
 
     console.log("Search Results:", lessons); // ✅ Debugging
     res.json(lessons);
@@ -76,7 +100,6 @@ app.get("/lessons/search", async (req, res) => {
     res.status(500).json({ error: "Failed to search lessons" });
   }
 });
-
 
 // ✅ Update Lesson API (PUT)
 app.put("/lessons/:id", async (req, res) => {
@@ -90,7 +113,9 @@ app.put("/lessons/:id", async (req, res) => {
     );
 
     if (result.matchedCount === 0) {
-      return res.status(404).json({ success: false, error: "Lesson not found" });
+      return res
+        .status(404)
+        .json({ success: false, error: "Lesson not found" });
     }
 
     res.json({ success: true, message: "Lesson updated successfully" });
@@ -106,14 +131,27 @@ app.post("/orders", async (req, res) => {
     const { firstName, lastName, address, city, state, zip, items } = req.body;
 
     // ✅ Validation
-    if (!firstName || !lastName || !address || !city || !state || !zip || !items || items.length === 0) {
-      return res.status(400).json({ success: false, error: "⚠️ Missing required fields" });
+    if (
+      !firstName ||
+      !lastName ||
+      !address ||
+      !city ||
+      !state ||
+      !zip ||
+      !items ||
+      items.length === 0
+    ) {
+      return res
+        .status(400)
+        .json({ success: false, error: "⚠️ Missing required fields" });
     }
 
     // ✅ Check Lesson Availability
     let allAvailable = true;
     for (const item of items) {
-      const lesson = await lessonsCollection.findOne({ _id: new ObjectId(item.lessonId) });
+      const lesson = await lessonsCollection.findOne({
+        _id: new ObjectId(item.lessonId),
+      });
       if (!lesson || lesson.space < item.quantity) {
         allAvailable = false;
         break;
@@ -121,22 +159,30 @@ app.post("/orders", async (req, res) => {
     }
 
     if (!allAvailable) {
-      return res.status(400).json({ success: false, error: "⚠️ Not enough space in one or more lessons." });
+      return res
+        .status(400)
+        .json({
+          success: false,
+          error: "⚠️ Not enough space in one or more lessons.",
+        });
     }
 
     // ✅ Insert Order & Update Lesson Spaces
     const session = client.startSession();
     await session.withTransaction(async () => {
-      const orderResult = await ordersCollection.insertOne({
-        firstName,
-        lastName,
-        address,
-        city,
-        state,
-        zip,
-        items,
-        createdAt: new Date()
-      }, { session });
+      const orderResult = await ordersCollection.insertOne(
+        {
+          firstName,
+          lastName,
+          address,
+          city,
+          state,
+          zip,
+          items,
+          createdAt: new Date(),
+        },
+        { session }
+      );
 
       // ✅ Reduce Lesson Spaces
       for (const item of items) {
@@ -147,7 +193,13 @@ app.post("/orders", async (req, res) => {
         );
       }
 
-      res.status(201).json({ success: true, message: "🎉 Order placed successfully!", orderId: orderResult.insertedId });
+      res
+        .status(201)
+        .json({
+          success: true,
+          message: "🎉 Order placed successfully!",
+          orderId: orderResult.insertedId,
+        });
     });
 
     await session.endSession();
@@ -159,7 +211,9 @@ app.post("/orders", async (req, res) => {
 
 // ✅ Start Server
 connectDB().then(() => {
-  app.listen(port, () => 
-    console.log(`🚀 Server running on Render: https://activityhive-backend-2.onrender.com`)
+  app.listen(port, () =>
+    console.log(
+      `🚀 Server running on Render: https://activityhive-backend-2.onrender.com`
+    )
   );
 });
