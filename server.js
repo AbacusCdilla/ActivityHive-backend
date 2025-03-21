@@ -50,6 +50,28 @@ app.get("/lessons", async (req, res) => {
   }
 });
 
+// ✅ Search Lessons API
+app.get("/lessons/search", async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q) {
+      return res.status(400).json({ error: "⚠️ Query parameter is required" });
+    }
+    
+    const lessons = await lessonsCollection.find({
+      $or: [
+        { name: { $regex: q, $options: "i" } },
+        { description: { $regex: q, $options: "i" } }
+      ]
+    }).toArray();
+    
+    res.json(lessons);
+  } catch (err) {
+    console.error("❌ Error searching lessons:", err);
+    res.status(500).json({ error: "Failed to search lessons" });
+  }
+});
+
 // ✅ Update Lesson API (PUT)
 app.put("/lessons/:id", async (req, res) => {
   try {
